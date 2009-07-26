@@ -2,8 +2,6 @@
 
 -compile(export_all).
 
--import(uri_template, [sub/2, parse/1, expand/2]).
-
 -import(lists, [all/2, reverse/1, reverse/2, foldl/3]).
 
 
@@ -114,7 +112,7 @@ test(Tag, Def, Tests) ->
   all(fun({Template, URI}) -> test(Tag, Def, Template, URI) end, Tests).
 
 test(_Tag, Def, Template, URI) ->
-  case sub(Def, Template) of
+  case uri_template:sub(Def, Template) of
     URI ->
       true;
     Value ->
