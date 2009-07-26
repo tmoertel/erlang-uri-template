@@ -3,7 +3,7 @@
 -export([new/1]).
 -export([sub/2]).
 
--import(lists, [map/2, foldl/3, reverse/1, reverse/2]).
+-import(lists, [foldl/3, reverse/1, reverse/2]).
 
 -define(is_empty_list(Value), is_tuple(Value) andalso element(2, Value) =:= {list, []}).
 
@@ -24,10 +24,10 @@ sub([Segment|Segments], Vars, URI) ->
   sub(Segments, Vars, reverse(expand(Segment, Vars), URI)).
 
 encode(Vars) ->
-  map(fun encode_var/1, Vars).
+  [encode_var(V) || V <- Vars].
 
 encode_var({Key, {list, List}}) ->
-  {Key, {list, map(fun fmt:percent_encode/1, List)}};
+  {Key, {list, [fmt:percent_encode(Value) || Value <- List]}};
 encode_var({Key, Value}) ->
   {Key, fmt:percent_encode(Value)}.
 

@@ -2,7 +2,7 @@
 
 -export([template/1]).
 
--import(lists, [map/2, reverse/1, splitwith/2]).
+-import(lists, [reverse/1, splitwith/2]).
 -import(string, [tokens/2]).
 
 
@@ -26,7 +26,7 @@ expansion(String) ->
   end.
 
 vars(String) ->
-  map(fun var/1, tokens(String, ",")).
+  [var(Token) || Token <- tokens(String, ",")].
 
 var(String) ->
   case tokens(String, "=") of
