@@ -1,28 +1,16 @@
-EFLAGS=-pa ebin -pa ../erlang-fmt/ebin
-
-ERL := erl $(EFLAGS)
-
-ERL_SOURCES := $(wildcard src/*.erl)
-
-ERL_OBJECTS := $(ERL_SOURCES:src/%.erl=ebin/%.beam)
+SOURCE_FILES := $(wildcard src/*.erl)
 
 
-all: objects
+all: ebin
 
-objects: $(ERL_OBJECTS)
+ebin: $(SOURCE_FILES:src/%.erl=ebin/%.beam)
 
 ebin/%.beam: src/%.erl
 	@test -d ebin || mkdir ebin
-	erlc -W +debug_info -o ebin $<
+	erlc -W +debug_info +warn_unused_vars +warn_unused_import -o ebin $<
 
 clean:
-	rm -rf ebin/*.beam erl_crash.dump
+	@rm -rf ebin erl_crash.dump
 
-test: objects
-	$(ERL) -noshell -s uri_template_test all -s init stop
-
-shell: objects
-	@$(ERL)
-
-dialyzer:
-	dialyzer --src -c src/
+test:
+	erl -noshell -pa ebin -s uri_template_test all -s init stop
