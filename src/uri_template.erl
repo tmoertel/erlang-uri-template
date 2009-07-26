@@ -1,7 +1,6 @@
 -module(uri_template).
 
--export([new/1]).
--export([sub/2]).
+-export([new/1, sub/2]).
 
 -import(lists, [foldl/3, reverse/1, reverse/2]).
 
