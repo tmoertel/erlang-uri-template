@@ -26,9 +26,9 @@ encode(Vars) ->
   [encode_var(V) || V <- Vars].
 
 encode_var({Key, {list, List}}) ->
-  {Key, {list, [fmt:percent_encode(Value) || Value <- List]}};
+  {Key, {list, [percent_encode(Value) || Value <- List]}};
 encode_var({Key, Value}) ->
-  {Key, fmt:percent_encode(Value)}.
+  {Key, percent_encode(Value)}.
 
 expand({var, Var, Default}, Values) ->
   case proplists:lookup(Var, Values) of
@@ -91,3 +91,25 @@ expand_join(Arg, {Var, Value}, Acc) ->
 
 expand_list(Vars, Values, Expand) ->
   reverse(foldl(fun({var, Var, []}, Acc) -> Expand(proplists:lookup(Var, Values), Acc) end, [], Vars)).
+
+-define(is_alphanum(C), C >= $A, C =< $Z; C >= $a, C =< $z; C >= $0, C =< $9).
+
+percent_encode(Term) when is_integer(Term) ->
+  integer_to_list(Term);
+percent_encode(Term) when is_list(Term) ->
+  percent_encode(lists:reverse(Term, []), []).
+
+percent_encode([X | T], Acc) when ?is_alphanum(X); X =:= $-; X =:= $_; X =:= $.; X =:= $~ ->
+  percent_encode(T, [X | Acc]);
+percent_encode([X | T], Acc) ->
+  NewAcc = [$%, hexchr(X bsr 4), hexchr(X band 16#0f) | Acc],
+  percent_encode(T, NewAcc);
+percent_encode([], Acc) ->
+  Acc.
+
+-compile({inline, [{hexchr, 1}]}).
+
+hexchr(N) when N >= 10 ->
+  N + $A - 10;
+hexchr(N) when N < 10 ->
+  N + $0.
