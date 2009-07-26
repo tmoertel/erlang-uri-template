@@ -1,19 +1,14 @@
 -module(uri_template).
 
--export([new/1, sub/2]).
+-export([sub/2]).
 
 -import(lists, [foldl/3, reverse/1, reverse/2]).
 
 -define(is_empty_list(Value), is_tuple(Value) andalso element(2, Value) =:= {list, []}).
 
 
-new(String) ->
-  {uri_template, uri_template_parse:template(String)}.
-
-sub(Vars, Template) when is_list(Template) ->
-  sub(encode(Vars), new(Template));
-sub(Vars, {uri_template, Segments}) ->
-  sub(Segments, Vars, []).
+sub(Vars, Template) ->
+  sub(parse(Template), encode(Vars), []).
 
 sub([], _Vars, URI) ->
   reverse(URI);
@@ -21,6 +16,41 @@ sub([Segment|Segments], Vars, URI) when is_integer(Segment) ->
   sub(Segments, Vars, [Segment|URI]);
 sub([Segment|Segments], Vars, URI) ->
   sub(Segments, Vars, reverse(expand(Segment, Vars), URI)).
+
+parse(Template) ->
+  parse(Template, []).
+
+parse([], Segments) ->
+  lists:reverse(Segments);
+parse([${|Etc], Segments) ->
+  {String, Rem} = break($}, Etc),
+  parse(Rem, [parse_expansion(String) | Segments]);
+parse([C|Etc], Segments) ->
+  parse(Etc, [C|Segments]).
+
+parse_expansion(String) ->
+  case string:tokens(String, "|") of
+    [String] ->
+      parse_var(String);
+    [[$-|Op], Args, Vars] ->
+      {list_to_atom(Op), Args, [parse_var(V) || V <- string:tokens(Vars, ",")]}
+  end.
+
+parse_var(String) ->
+  case string:tokens(String, "=") of
+    [String] ->
+      {var, list_to_atom(String), []};
+    [Var, Default] ->
+      {var, list_to_atom(Var), Default}
+  end.
+
+break(Sep, List) ->
+  case lists:splitwith(fun(C) -> C =/= Sep end, List) of
+    {Taken, []} ->
+      {Taken, []};
+    {Taken, [Sep|Etc]} ->
+      {Taken, Etc}
+  end.
 
 encode(Vars) ->
   [encode_var(V) || V <- Vars].
