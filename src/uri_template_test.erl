@@ -2,10 +2,13 @@
 
 -compile(export_all).
 
--import(lists, [all/2, reverse/1, reverse/2, foldl/3]).
+-import(lists, [reverse/1, reverse/2, foldl/3]).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
-all() ->
+suite_test_() ->
+  [
   test_var_substitution(),
   test_the_opt_operator(),
   test_the_neg_operator(),
@@ -13,7 +16,8 @@ all() ->
   test_the_suffix_operator(),
   test_the_join_operator(),
   test_the_list_operator(),
-  test_examples().
+  test_examples()
+  ].
 
 test_var_substitution() ->
   test("('var') substitution", [{foo, "fred"}], [
@@ -108,14 +112,9 @@ uchr(Hex) ->
   xmerl_ucs:to_utf8(erlang:list_to_integer(Hex, 16)).
 
 test(Tag, Def, Tests) ->
-  io:format("Testing ~s~n", [Tag]),
-  all(fun({Template, URI}) -> test(Tag, Def, Template, URI) end, Tests).
+    {Tag, [test(Def, Test) || Test <- Tests]}.
 
-test(_Tag, Def, Template, URI) ->
-  case uri_template:sub(Def, Template) of
-    URI ->
-      true;
-    Value ->
-      io:format("~s not as expected: ~p~n", [Template, Value]),
-      false
-  end.
+test(Def, {Template, URI}) ->
+    {Template, ?_assertEqual(URI, uri_template:sub(Def, Template))}.
+
+-endif.
